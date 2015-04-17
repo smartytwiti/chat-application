@@ -83,7 +83,8 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
 
   public void write(String message, String user, String room, String isSystem, String options)
   {
-    DBCollection coll = db().getCollection(M_ROOM_PREFIX+room);
+    String roomType = getTypeRoomChat(room);
+    DBCollection coll = db().getCollection(M_ROOM_PREFIX+roomType);
 
     message = StringUtils.chomp(message);
     message = message.replaceAll("&", "&#38");
@@ -100,6 +101,7 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
     doc.put("time", new Date());
     doc.put("timestamp", System.currentTimeMillis());
     doc.put("isSystem", isSystem);
+    doc.put("roomId", room);
     if (options!=null)
     {
       options = options.replaceAll("<", "&lt;");
@@ -113,10 +115,12 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
 
   public void delete(String room, String user, String messageId)
   {
-    DBCollection coll = db().getCollection(M_ROOM_PREFIX+room);
+    String roomType = getTypeRoomChat(room);
+    DBCollection coll = db().getCollection(M_ROOM_PREFIX+roomType);
     BasicDBObject query = new BasicDBObject();
     query.put("_id", new ObjectId(messageId));
     query.put("user", user);
+    query.put("roomId", room);
     DBCursor cursor = coll.find(query);
     if (cursor.hasNext())
     {
@@ -130,7 +134,8 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
 
   public void edit(String room, String user, String messageId, String message)
   {
-    DBCollection coll = db().getCollection(M_ROOM_PREFIX+room);
+    String roomType = getTypeRoomChat(room);
+    DBCollection coll = db().getCollection(M_ROOM_PREFIX+roomType);
 
     message = StringUtils.chomp(message);
     message = message.replaceAll("&", "&#38");
@@ -143,6 +148,7 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
     BasicDBObject query = new BasicDBObject();
     query.put("_id", new ObjectId(messageId));
     query.put("user", user);
+    query.put("roomId", room);
     DBCursor cursor = coll.find(query);
     if (cursor.hasNext())
     {
@@ -170,16 +176,17 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
 
     SimpleDateFormat formatter = new SimpleDateFormat("hh:mm aaa");
     SimpleDateFormat formatterDate = new SimpleDateFormat("dd/MM/yyyy hh:mm aaa");
-    // formatter.format();
     Calendar calendar = Calendar.getInstance();
     calendar.set(Calendar.HOUR, 0);
     calendar.set(Calendar.MINUTE, 0);
     calendar.set(Calendar.SECOND, 0);
     Date today = calendar.getTime();
 
-    DBCollection coll = db().getCollection(M_ROOM_PREFIX+room);
+    String roomType = getTypeRoomChat(room);
+    DBCollection coll = db().getCollection(M_ROOM_PREFIX+roomType);
 
     BasicDBObject query = new BasicDBObject();
+    query.put("roomId", room);
     long from = (fromTimestamp!=null) ? fromTimestamp : System.currentTimeMillis() - readMillis;
     BasicDBObject tsobj = new BasicDBObject("$gt", from);
     if (toTimestamp!=null)
@@ -328,13 +335,13 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
 
   }
 
-  private void ensureIndexInRoom(String room)
+  private void ensureIndexInRoom(String type)
   {
-    DBCollection coll = db().getCollection(M_ROOM_PREFIX+room);
+    DBCollection coll = db().getCollection(M_ROOM_PREFIX+type);
     BasicDBObject doc = new BasicDBObject();
     doc.put("timestamp", System.currentTimeMillis());
     coll.insert(doc);
-    ConnectionManager.getInstance().ensureIndexesInRoom(room);
+    ConnectionManager.getInstance().ensureIndexesInRoom(type);
     coll.remove(doc);
   }
 
@@ -353,7 +360,7 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
         basicDBObject.put("space", space);
         basicDBObject.put("type", TYPE_ROOM_SPACE);
         coll.insert(basicDBObject);
-        ensureIndexInRoom(room);
+        ensureIndexInRoom(TYPE_ROOM_SPACE);
       } catch (MongoException me) {
         LOG.warning(me.getCode()+" : "+room+" : "+me.getMessage());
       }
@@ -394,7 +401,7 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
         basicDBObject.put("user", user);
         basicDBObject.put("type", TYPE_ROOM_TEAM);
         coll.insert(basicDBObject);
-        ensureIndexInRoom(room);
+        ensureIndexInRoom(TYPE_ROOM_TEAM);
       } catch (MongoException me) {
         LOG.warning(me.getCode()+" : "+room+" : "+me.getMessage());
       }
@@ -417,7 +424,7 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
         basicDBObject.put("identifier", identifier);
         basicDBObject.put("type", TYPE_ROOM_EXTERNAL);
         coll.insert(basicDBObject);
-        ensureIndexInRoom(room);
+        ensureIndexInRoom(TYPE_ROOM_EXTERNAL);
       } catch (MongoException me) {
         LOG.warning(me.getCode()+" : "+room+" : "+me.getMessage());
       }
@@ -482,7 +489,7 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
         basicDBObject.put("users", users);
         basicDBObject.put("type", TYPE_ROOM_USER);
         coll.insert(basicDBObject);
-        ensureIndexInRoom(room);
+        ensureIndexInRoom(TYPE_ROOM_USER);
       } catch (MongoException me) {
         LOG.warning(me.getCode()+" : "+room+" : "+me.getMessage());
       }
@@ -717,17 +724,11 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
   public int getNumberOfMessages()
   {
     int nb = 0;
-    DBCollection coll = db().getCollection(M_ROOM_PREFIX+M_ROOMS_COLLECTION);
-    BasicDBObject query = new BasicDBObject();
-    DBCursor cursor = coll.find(query);
-    while (cursor.hasNext())
-    {
-      DBObject dbo = cursor.next();
-      String roomId = dbo.get("_id").toString();
-      DBCollection collr = db().getCollection(M_ROOM_PREFIX+roomId);
+    String[] roomTypes = {TYPE_ROOM_USER, TYPE_ROOM_SPACE, TYPE_ROOM_TEAM, TYPE_ROOM_EXTERNAL};
+    for (String type : roomTypes) {
+      DBCollection collr = db().getCollection(M_ROOM_PREFIX+type);
       BasicDBObject queryr = new BasicDBObject();
       DBCursor cursorr = collr.find(queryr);
-//      LOG.info(roomId+" = "+cursorr.count());
       nb += cursorr.count();
     }
 
