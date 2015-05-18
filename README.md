@@ -38,6 +38,14 @@ To be sure, the Chat will never interfere with eXo Platform, you can install it 
 Jump to Wiki Install Page : [Two Servers Mode](https://github.com/exo-addons/chat-application/wiki/Two-Servers-Mode)
 
 
+Migrate Chat Addon after CHAT-197
+---------------------------------
+From chat-application folder, run this command
+
+	mongo --nodb --eval "var hostname='{host}', dbName='{dbName}';" migration-chat-addon.js
+
+with {host} is host of mongoDB server, {dbName} is name of database that is configured in chat.properties
+
 
 License
 ===============
