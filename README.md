@@ -40,11 +40,17 @@ Jump to Wiki Install Page : [Two Servers Mode](https://github.com/exo-addons/cha
 
 Migrate Chat Addon after CHAT-197
 ---------------------------------
-From chat-application folder, run this command
+* Before processing the migration, it's recommended to backup the data. This can be done with the following command:
 
-	mongo --nodb --eval "var hostname='{host}', dbName='{dbName}';" migration-chat-addon.js
+	mongodump --host {host} --port {port} --username {username} --password {password} --db {dbName} --out "{backup_folder}"
 
-with {host} is host of mongoDB server, {dbName} is name of database that is configured in chat.properties
+with {host} and {port} are respectively hostname/IP and port of mongoDB server; {username} and {password} are required if authentication is enabled for your database; {dbName} is name of chat database and {backup_folder} is path to folder that backup data is stored.
+
+* To migrate, from chat-application folder, run this command
+
+	mongo --nodb --eval "var host='{host}', port='{port}', uname='{username}', passwd='{password}', dbName='{dbName}';" migration-chat-addon.js
+
+with {host} and {port} are respectively hostname/IP and port of mongoDB server; {username} and {password} are required if authentication is enabled for your database; {dbName} is name of database that is configured in chat.properties
 
 
 License
