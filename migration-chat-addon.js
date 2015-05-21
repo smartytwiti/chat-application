@@ -16,9 +16,9 @@ if (!(typeof dbName === "undefined") && dbName) {
     var conn = new Mongo();
     chatDb = conn.getDB(dbName);
   }
-  print("====== Connect to database "+dbName+" successfully");
+  print("====== Connected to database "+dbName+" successfully");
 } else {
-  throw new Error("Database name to migration is missing");
+  throw new Error("Database name is required. Set it in the variable 'dbName'");
 }
 
 var roomTypes = ["u", "s", "t", "e"];
@@ -59,9 +59,5 @@ function migrateRoom(roomType) {
 
 function isCollectionExist(nameOfDB, collection) {
   var collections = chatDb.system.namespaces.find({"name": nameOfDB+"."+collection}).toArray();
-  if (collections.length > 0) {
-    return true;
-  } else {
-    return false;
-  }
+  return (collections.length > 0);
 }
