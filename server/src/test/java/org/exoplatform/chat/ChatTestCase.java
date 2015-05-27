@@ -37,7 +37,7 @@ public class ChatTestCase extends AbstractChatTestCase
     roomId = ServiceBootstrap.getChatService().getRoom(users);
     roomType = ServiceBootstrap.getChatService().getTypeRoomChat(roomId);
     ConnectionManager.getInstance().getDB().getCollection(ChatService.M_ROOM_PREFIX+roomType).drop();
-    ConnectionManager.getInstance().getDB().getCollection(ChatService.M_ROOM_PREFIX+ChatService.M_ROOMS_COLLECTION).drop();
+    ConnectionManager.getInstance().getDB().getCollection(ChatService.M_ROOMS_COLLECTION).drop();
 
     ConnectionManager.getInstance().getDB().getCollection(UserService.M_USERS_COLLECTION).drop();
 

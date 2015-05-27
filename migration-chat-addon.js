@@ -1,37 +1,31 @@
-var chatDb;
-if (!(typeof dbName === "undefined") && dbName) {
-  var connStr = "";
-  if (!(typeof host === "undefined") && host) {
-    connStr += host;
+var dbName = db;
+var query = {"name": new RegExp("^"+dbName+".room_")};
+var roomCollections = db.system.namespaces.find(query).toArray();
+if (roomCollections.length > 0) {
+  var roomTypes = ["u", "s", "t", "e"];
+  for (var i=0; i<roomTypes.length; i++) {
+    print("====== Start migrating rooms which type is "+roomTypes[i]);
+    migrateRoom(roomTypes[i]);
   }
-  if (!(typeof port === "undefined") && port) {
-    connStr += ":" + port;
-  }
-  if (connStr != "") {
-    chatDb = connect(connStr+"/"+dbName);
-    if (!(typeof uname === "undefined") && uname && !(typeof passwd === "undefined") && passwd) {
-      chatDb.auth(uname, passwd);
+  if (isCollectionExist(dbName, "room_rooms")) {
+    if (!isCollectionExist(dbName, "rooms")) {
+      db.room_rooms.renameCollection("rooms");
+    } else {
+      db.room_rooms.copyTo("rooms");
+      db.room_rooms.drop();
     }
-  } else {
-    var conn = new Mongo();
-    chatDb = conn.getDB(dbName);
+    print("====== Migrated room_rooms collection.");
   }
-  print("====== Connected to database "+dbName+" successfully");
 } else {
-  throw new Error("Database name is required. Set it in the variable 'dbName'");
-}
-
-var roomTypes = ["u", "s", "t", "e"];
-for (var i=0; i<roomTypes.length; i++) {
-  print("====== Start migrating rooms which type is "+roomTypes[i]);
-  migrateRoom(roomTypes[i]);
+  print("====== Your database has already been migrated");
+  print("====== Bye bye!");
 }
 
 function migrateRoom(roomType) {
-  if (!isCollectionExist(dbName, "room_"+roomType)) {
-    chatDb.createCollection("room_"+roomType);
+  if (!isCollectionExist(dbName, "messages_room_"+roomType)) {
+    db.createCollection("messages_room_"+roomType);
   }
-  var rooms = chatDb.room_rooms.find({"type":roomType});
+  var rooms = db.room_rooms.find({"type":roomType});
   // Add 'roomId' field to all documents of a room which type is given
   // Move all documents of that room to room_{type}
   // Remove migrated room
@@ -40,13 +34,13 @@ function migrateRoom(roomType) {
     var roomName = "room_"+roomId;
     if (isCollectionExist(dbName, roomName)) {
       print("====== Start migrating collection room_"+roomId);
-      var addRoomIdToMessages = "chatDb."+roomName+".update({}, {$set: {\"roomId\": \""+roomId+"\"}}, false, true)";
+      var addRoomIdToMessages = "db."+roomName+".update({}, {$set: {\"roomId\": \""+roomId+"\"}}, false, true)";
       eval(addRoomIdToMessages);
 
-      var insertAllMessages = "chatDb."+roomName+".find().forEach(function(doc){chatDb.room_"+roomType+".insert(doc)})";
+      var insertAllMessages = "db."+roomName+".find().forEach(function(doc){db.messages_room_"+roomType+".insert(doc)})";
       eval(insertAllMessages);
     
-      var dropRoom = "chatDb."+roomName+".drop()";
+      var dropRoom = "db."+roomName+".drop()";
       eval(dropRoom);
       print("====== End migrating collection room_"+roomId);
     } else {
@@ -58,6 +52,6 @@ function migrateRoom(roomType) {
 }
 
 function isCollectionExist(nameOfDB, collection) {
-  var collections = chatDb.system.namespaces.find({"name": nameOfDB+"."+collection}).toArray();
+  var collections = db.system.namespaces.find({"name": nameOfDB+"."+collection}).toArray();
   return (collections.length > 0);
 }

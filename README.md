@@ -46,11 +46,15 @@ Migrate Chat Addon after CHAT-197
 
 with {host} and {port} are respectively hostname/IP and port of mongoDB server; {username} and {password} are required if authentication is enabled for your database; {dbName} is name of chat database and {backup_folder} is path to folder that backup data is stored.
 
-* To migrate, from chat-application folder, run this command
+* To migrate, you have two options:
 
-	mongo --nodb --eval "var host='{host}', port='{port}', uname='{username}', passwd='{password}', dbName='{dbName}';" migration-chat-addon.js
+** Automatical migration: Copy migration-chat-addon.js in chat-application folder to ${TOMCAT_HOME} of Chat Server then restart Chat Server tomcat.
 
-with {host} and {port} are respectively hostname/IP and port of mongoDB server; {username} and {password} are required if authentication is enabled for your database; {dbName} is name of database that is configured in chat.properties
+** Manual migration: from chat-application folder, run this command
+
+	mongo --quiet {host}:{port}/{dbName} -u {username} -p {password} migration-chat-addon.js
+
+with {host} and {port} are respectively hostname/IP and port of mongoDB server; {username} and {password} are required if authentication is enabled for your database; {dbName} is name of database that is configured in chat.properties.
 
 
 License

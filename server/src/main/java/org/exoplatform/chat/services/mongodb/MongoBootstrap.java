@@ -124,7 +124,7 @@ public class MongoBootstrap
         db.authenticate(PropertyManager.getProperty(PropertyManager.PROPERTY_DB_USER), PropertyManager.getProperty(PropertyManager.PROPERTY_DB_PASSWORD).toCharArray());
       }
       initCollection("notifications");
-      initCollection("room_rooms");
+      initCollection(ChatServiceImpl.M_ROOMS_COLLECTION);
       initCollection("users");
       dropTokenCollectionIfExists();
 
@@ -184,8 +184,8 @@ public class MongoBootstrap
     notUnique.put("background", true);
 
     DBCollection collr = getDB().getCollection(ChatServiceImpl.M_ROOM_PREFIX+type);
-    collr.ensureIndex(new BasicDBObject("timestamp", 1), notUnique.append("name", "timestamp_1").append("ns", dbName+".room_"+type));
-    collr.ensureIndex(new BasicDBObject("timestamp", -1), notUnique.append("name", "timestamp_m1").append("ns", dbName+".room_"+type));
+    collr.ensureIndex(new BasicDBObject("timestamp", 1), notUnique.append("name", "timestamp_1").append("ns", dbName+"."+ChatServiceImpl.M_ROOM_PREFIX+type));
+    collr.ensureIndex(new BasicDBObject("timestamp", -1), notUnique.append("name", "timestamp_m1").append("ns", dbName+"."+ChatServiceImpl.M_ROOM_PREFIX+type));
     LOG.info("##### room index in "+ChatServiceImpl.M_ROOM_PREFIX+type);
   }
 
@@ -209,25 +209,24 @@ public class MongoBootstrap
     index.put("categoryId", 1);
     index.put("category", 1);
     index.put("type", 1);
-//    index.put("isRead", 1);
+    // index.put("isRead", 1);
     notifications.createIndex(index, notUnique.append("name", "user_1_type_1_category_1_categoryId_1").append("ns", dbName+".notifications"));
     LOG.info("### notifications indexes in "+getDB().getName());
 
-    DBCollection rooms = getDB().getCollection("room_rooms");
+    DBCollection rooms = getDB().getCollection(ChatServiceImpl.M_ROOMS_COLLECTION);
     rooms.dropIndexes();
-    rooms.createIndex(new BasicDBObject("space", 1), notUnique.append("name", "space_1").append("ns", dbName+".room_rooms"));
-    rooms.createIndex(new BasicDBObject("users", 1), notUnique.append("name", "users_1").append("ns", dbName+".room_rooms"));
-    rooms.createIndex(new BasicDBObject("shortName", 1), notUnique.append("name", "shortName_1").append("ns", dbName+".room_rooms"));
+    rooms.createIndex(new BasicDBObject("space", 1), notUnique.append("name", "space_1").append("ns", dbName+"."+ChatServiceImpl.M_ROOMS_COLLECTION));
+    rooms.createIndex(new BasicDBObject("users", 1), notUnique.append("name", "users_1").append("ns", dbName+"."+ChatServiceImpl.M_ROOMS_COLLECTION));
+    rooms.createIndex(new BasicDBObject("shortName", 1), notUnique.append("name", "shortName_1").append("ns", dbName+"."+ChatServiceImpl.M_ROOMS_COLLECTION));
     LOG.info("### rooms indexes in "+getDB().getName());
 
     String[] roomTypes = {ChatServiceImpl.TYPE_ROOM_USER, ChatServiceImpl.TYPE_ROOM_SPACE, ChatServiceImpl.TYPE_ROOM_TEAM, ChatServiceImpl.TYPE_ROOM_EXTERNAL};
     for (String type : roomTypes) {
       DBCollection collr = getDB().getCollection(ChatServiceImpl.M_ROOM_PREFIX+type);
-      collr.ensureIndex(new BasicDBObject("timestamp", 1), notUnique.append("name", "timestamp_1").append("ns", dbName+".room_"+type));
-      collr.ensureIndex(new BasicDBObject("timestamp", -1), notUnique.append("name", "timestamp_m1").append("ns", dbName+".room_"+type));
+      collr.ensureIndex(new BasicDBObject("timestamp", 1), notUnique.append("name", "timestamp_1").append("ns", dbName+"."+ChatServiceImpl.M_ROOM_PREFIX+type));
+      collr.ensureIndex(new BasicDBObject("timestamp", -1), notUnique.append("name", "timestamp_m1").append("ns", dbName+"."+ChatServiceImpl.M_ROOM_PREFIX+type));
       LOG.info("##### room index in "+type);
     }
-
 
     DBCollection users = getDB().getCollection("users");
     users.dropIndexes();
@@ -251,6 +250,5 @@ public class MongoBootstrap
     LOG.info("### users indexes in "+getDB().getName());
 
     LOG.info("### Indexes creation completed in "+getDB().getName());
-
   }
 }
