@@ -16,9 +16,6 @@ if (roomCollections.length > 0) {
     }
     print("====== Migrated room_rooms collection.");
   }
-} else {
-  print("====== Your database has already been migrated");
-  print("====== Bye bye!");
 }
 
 function migrateRoom(roomType) {
