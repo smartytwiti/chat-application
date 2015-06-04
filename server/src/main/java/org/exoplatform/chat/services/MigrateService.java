@@ -61,16 +61,7 @@ public class MigrateService {
     // Copy migration script to /temp folder to perform migrate process via mongo command
     InputStream fileIn = this.getClass().getClassLoader().getResourceAsStream("migration-chat-addon.js");
     OutputStream fileOut = null;
-    String migrationScriptPath = "";
-
-    String tomcatHomeDir = System.getProperty("catalina.base");
-    String jbossHomeDir = System.getProperty("jboss.home.dir");
-    if (!StringUtils.isEmpty(tomcatHomeDir)) {
-      migrationScriptPath += tomcatHomeDir + "/temp/migration-chat-addon.js";
-    } else if (!StringUtils.isEmpty(jbossHomeDir)) {
-      migrationScriptPath += jbossHomeDir + "/temp/migration-chat-addon.js";
-    }
-
+    String migrationScriptPath = System.getProperty("java.io.tmpdir") + "/migration-chat-addon.js";
     File migrationScriptfile = new File(migrationScriptPath);
     try {
       if (migrationScriptfile.createNewFile()) {
@@ -82,11 +73,16 @@ public class MigrateService {
         }
       }
     } catch(IOException e){
-      LOG.error("Failed to copy file : "+e.getMessage(), e);
+      LOG.error("Failed to copy migration script : "+e.getMessage(), e);
+      return;
     } finally {
       try {
-        fileIn.close();
-        fileOut.close();
+        if (fileIn != null) {
+          fileIn.close();
+        }
+        if (fileOut != null) {
+          fileOut.close();
+        }
       } catch (IOException e){
         LOG.error("Failed to close files : "+e.getMessage(), e);
       }
@@ -112,7 +108,7 @@ public class MigrateService {
       if (migrationScriptfile.delete()) {
         LOG.info("Migration script is deleted");
       } else {
-        LOG.error("Deleting migration script operation is failed");
+        LOG.error("Deleting migration script operation has failed");
       }
     }
   }

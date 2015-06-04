@@ -37,8 +37,8 @@ To be sure, the Chat will never interfere with eXo Platform, you can install it 
 
 Jump to Wiki Install Page : [Two Servers Mode](https://github.com/exo-addons/chat-application/wiki/Two-Servers-Mode)
 
-Migrate to Chat 1.1.0
----------------------
+Migrate to Chat 1.2
+-------------------
 * Before processing the migration, it's recommended to backup the data. This can be done with the following command:
 
 	mongodump --host {host} --port {port} --username {username} --password {password} --db {dbName} --out "{backup_folder}"
