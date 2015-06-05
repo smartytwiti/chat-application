@@ -30,7 +30,6 @@ function migrateRoom(roomType) {
     var roomId = room._id;
     var roomName = "room_"+roomId;
     if (isCollectionExist(dbName, roomName)) {
-      print("====== Start migrating collection room_"+roomId);
       var addRoomIdToMessages = "db."+roomName+".update({}, {$set: {\"roomId\": \""+roomId+"\"}}, false, true)";
       eval(addRoomIdToMessages);
 
@@ -39,9 +38,7 @@ function migrateRoom(roomType) {
     
       var dropRoom = "db."+roomName+".drop()";
       eval(dropRoom);
-      print("====== End migrating collection room_"+roomId);
-    } else {
-      print("====== Collection room_"+roomId+" no longer exists");
+      print("====== Migrating collection room_"+roomId+" has finished");
     }
   });
   print("====== End migrating rooms which type is "+roomType);

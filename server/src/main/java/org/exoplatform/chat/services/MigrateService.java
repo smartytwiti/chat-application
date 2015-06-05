@@ -61,16 +61,15 @@ public class MigrateService {
     // Copy migration script to /temp folder to perform migrate process via mongo command
     InputStream fileIn = this.getClass().getClassLoader().getResourceAsStream("migration-chat-addon.js");
     OutputStream fileOut = null;
-    String migrationScriptPath = System.getProperty("java.io.tmpdir") + "/migration-chat-addon.js";
-    File migrationScriptfile = new File(migrationScriptPath);
+    File migrationScriptfile = null;
     try {
-      if (migrationScriptfile.createNewFile()) {
-        fileOut = new FileOutputStream(migrationScriptfile);
-        byte[] buf = new byte[1024];
-        int bytesRead;
-        while ((bytesRead = fileIn.read(buf)) > 0) {
-          fileOut.write(buf, 0, bytesRead);
-        }
+      migrationScriptfile = File.createTempFile("migration-chat-addon", ".js");
+      migrationScriptfile.deleteOnExit();
+      fileOut = new FileOutputStream(migrationScriptfile);
+      byte[] buf = new byte[1024];
+      int bytesRead;
+      while ((bytesRead = fileIn.read(buf)) > 0) {
+        fileOut.write(buf, 0, bytesRead);
       }
     } catch(IOException e){
       LOG.error("Failed to copy migration script : "+e.getMessage(), e);
@@ -89,27 +88,19 @@ public class MigrateService {
     }
 
     // Execute mongo command
-    String command = sb.append(migrationScriptPath).toString();
-    StringBuffer output = new StringBuffer();
-    Process p;
+    String command = sb.append(migrationScriptfile.getAbsolutePath()).toString();
     try {
-      p = Runtime.getRuntime().exec(command);
+      Process p = Runtime.getRuntime().exec(command);
       p.waitFor();
+      StringBuffer output = new StringBuffer();
       BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
       String line = "";
       while ((line = reader.readLine())!= null) {
         output.append(line + "\n");
       }
-      LOG.info("====== Migration process output ======");
       LOG.info(output.toString());
     } catch (Exception e) {
       LOG.error("Error while migrating chat data : " + e.getMessage(), e);
-    } finally {
-      if (migrationScriptfile.delete()) {
-        LOG.info("Migration script is deleted");
-      } else {
-        LOG.error("Deleting migration script operation has failed");
-      }
     }
   }
 }
