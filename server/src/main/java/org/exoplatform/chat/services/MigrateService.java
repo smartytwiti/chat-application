@@ -91,13 +91,13 @@ public class MigrateService {
     String command = sb.append(migrationScriptfile.getAbsolutePath()).toString();
     try {
       Process p = Runtime.getRuntime().exec(command);
-      p.waitFor();
       StringBuffer output = new StringBuffer();
       BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
       String line = "";
       while ((line = reader.readLine())!= null) {
         output.append(line + "\n");
       }
+      p.waitFor();
       LOG.info(output.toString());
     } catch (Exception e) {
       LOG.error("Error while migrating chat data : " + e.getMessage(), e);
