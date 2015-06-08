@@ -30,6 +30,7 @@
     <module>exo-addons-chat-extension-config</module>
     <module>exo-addons-chat-extension</module>
     <module>exo-addons-chat-extension-pkg</module>
+    <module>exo-addons-chat-extension-pkg-standalone</module>
     <module>exo-addons-chat-extension-config-community</module>
     <module>exo-addons-chat-extension-community</module>
     <module>exo-addons-chat-extension-pkg-community</module>
@@ -47,6 +48,7 @@
     <javax.enterprise.cdi.version>1.0-SP4</javax.enterprise.cdi.version>
     <juzu.version>0.6.2</juzu.version>
     <mongodb-java-driver.version>2.12.2</mongodb-java-driver.version>
+    <org.apache.tomcat.version>7.0.57</org.apache.tomcat.version>
     <!-- **************************************** -->
     <!-- Jenkins Settings -->
     <!-- **************************************** -->
@@ -112,6 +114,12 @@
         <version>${project.version}</version>
         <type>war</type>
       </dependency>
+      <dependency>
+        <groupId>org.exoplatform.addons.chat</groupId>
+        <artifactId>server-standalone</artifactId>
+        <version>${project.version}</version>
+        <type>war</type>
+      </dependency>
       <!-- Import versions from platform project -->
       <dependency>
         <groupId>org.exoplatform.platform</groupId>
@@ -155,6 +163,12 @@
         <groupId>org.mongodb</groupId>
         <artifactId>mongo-java-driver</artifactId>
         <version>${mongodb-java-driver.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tomcat</groupId>
+        <artifactId>tomcat</artifactId>
+        <version>${org.apache.tomcat.version}</version>
+        <type>zip</type>
       </dependency>
     </dependencies>
   </dependencyManagement>
