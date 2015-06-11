@@ -41,6 +41,11 @@ function migrateRoom(roomType) {
       print("====== Migrating collection room_"+roomId+" has finished");
     }
   });
+
+  // Remove field 'time' from every documents
+  var removeTimeField = "db.messages_room_"+roomType+".update({}, {$unset: {\"time\": 1}}, false, true)";
+  eval(removeTimeField);
+
   print("====== End migrating rooms which type is "+roomType);
   print("==================================================");
 }

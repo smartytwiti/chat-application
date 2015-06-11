@@ -98,7 +98,6 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
     BasicDBObject doc = new BasicDBObject();
     doc.put("user", user);
     doc.put("message", message);
-    doc.put("time", new Date());
     doc.put("timestamp", System.currentTimeMillis());
     doc.put("isSystem", isSystem);
     doc.put("roomId", room);
@@ -241,14 +240,11 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
         date = "";
         try
         {
-          if (dbo.containsField("time"))
-          {
-            Date date1 = (Date)dbo.get("time");
-            if (date1.before(today) || isTextOnly)
-              date = formatterDate.format(date1);
-            else
-              date = formatter.format(date1);
-
+          Date date1 = new Date(Long.parseLong(timestamp));
+          if (date1.before(today) || isTextOnly) {
+            date = formatterDate.format(date1);
+          } else {
+            date = formatter.format(date1);
           }
         }
         catch (Exception e)
