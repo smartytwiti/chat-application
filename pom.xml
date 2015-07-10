@@ -54,9 +54,6 @@
     <!-- **************************************** -->
     <jenkins.job.name>chat-application-master-ci</jenkins.job.name>
     <!-- **************************************** -->
-    <!-- Other Settings -->
-    <!-- **************************************** -->
-    <project.output.directory>/Users/benjamin/java/demos/eXo-Platform-tomcat-3.5.3-MOD/tomcat-bundle/webapps</project.output.directory>
   </properties>
   <dependencyManagement>
     <dependencies>
