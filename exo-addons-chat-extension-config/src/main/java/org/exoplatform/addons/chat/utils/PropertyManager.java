@@ -24,6 +24,8 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class PropertyManager {
   private static final Logger LOG = Logger.getLogger(PropertyManager.class.getName());
 

@@ -87,7 +87,7 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
 
   public void write(String message, String user, String room, String isSystem, String options, String dbName)
   {
-    String roomType = getTypeRoomChat(room);
+    String roomType = getTypeRoomChat(room, dbName);
     DBCollection coll = db(dbName).getCollection(M_ROOM_PREFIX+roomType);
 
     message = StringUtils.chomp(message);
@@ -118,7 +118,7 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
 
   public void delete(String room, String user, String messageId, String dbName)
   {
-    String roomType = getTypeRoomChat(room);
+    String roomType = getTypeRoomChat(room, dbName);
     DBCollection coll = db(dbName).getCollection(M_ROOM_PREFIX+roomType);
     BasicDBObject query = new BasicDBObject();
     query.put("_id", new ObjectId(messageId));
@@ -137,7 +137,7 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
 
   public void edit(String room, String user, String messageId, String message, String dbName)
   {
-    String roomType = getTypeRoomChat(room);
+    String roomType = getTypeRoomChat(room, dbName);
     DBCollection coll = db(dbName).getCollection(M_ROOM_PREFIX+roomType);
 
     message = StringUtils.chomp(message);
@@ -185,7 +185,7 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
     calendar.set(Calendar.SECOND, 0);
     Date today = calendar.getTime();
 
-    String roomType = getTypeRoomChat(room);
+    String roomType = getTypeRoomChat(room, dbName);
     DBCollection coll = db(dbName).getCollection(M_ROOM_PREFIX+roomType);
 
     BasicDBObject query = new BasicDBObject();
@@ -498,8 +498,8 @@ public class ChatServiceImpl implements org.exoplatform.chat.services.ChatServic
     return room;
   }
   
-  public String getTypeRoomChat(String roomId){
-    DBCollection coll = db().getCollection(M_ROOMS_COLLECTION);
+  public String getTypeRoomChat(String roomId, String dbName){
+    DBCollection coll = db(dbName).getCollection(M_ROOMS_COLLECTION);
     BasicDBObject query = new BasicDBObject();
     query.put("_id", roomId);
     DBCursor cursor = coll.find(query);

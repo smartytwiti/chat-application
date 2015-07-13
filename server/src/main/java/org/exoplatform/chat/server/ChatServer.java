@@ -261,7 +261,7 @@ public class ChatServer
     }
     String data = chatService.read(room, userService, false, from, to, dbName);
     BasicDBObject datao = (BasicDBObject)JSON.parse(data);
-    String roomType = chatService.getTypeRoomChat(room);
+    String roomType = chatService.getTypeRoomChat(room, dbName);
     SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
     String date = formatter.format(new GregorianCalendar().getTime());
     String title = "";
@@ -351,7 +351,7 @@ public class ChatServer
       LOG.info("fromTimestamp is not a valid Long number");
     }
     String data = chatService.read(room, userService, false, from, to, dbName);
-    String typeRoom = chatService.getTypeRoomChat(room);
+    String typeRoom = chatService.getTypeRoomChat(room, dbName);
     BasicDBObject datao = (BasicDBObject)JSON.parse(data);
     if (datao.containsField("messages")) {
       if(ChatService.TYPE_ROOM_USER.equalsIgnoreCase(typeRoom)) {

@@ -29,13 +29,13 @@ public class ChatTestCase extends AbstractChatTestCase
     users.add("benjamin");
     users.add("john");
     String roomId = ServiceBootstrap.getChatService().getRoom(users, null);
-    String roomType = ServiceBootstrap.getChatService().getTypeRoomChat(roomId);
+    String roomType = ServiceBootstrap.getChatService().getTypeRoomChat(roomId, null);
     ConnectionManager.getInstance().getDB().getCollection(ChatService.M_ROOM_PREFIX+roomType).drop();
     users = new ArrayList<String>();
     users.add("benjamin");
     users.add("mary");
     roomId = ServiceBootstrap.getChatService().getRoom(users, null);
-    roomType = ServiceBootstrap.getChatService().getTypeRoomChat(roomId);
+    roomType = ServiceBootstrap.getChatService().getTypeRoomChat(roomId, null);
     ConnectionManager.getInstance().getDB().getCollection(ChatService.M_ROOM_PREFIX+roomType).drop();
     ConnectionManager.getInstance().getDB().getCollection(ChatService.M_ROOMS_COLLECTION).drop();
 

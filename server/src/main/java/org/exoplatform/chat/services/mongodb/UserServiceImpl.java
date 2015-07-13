@@ -457,7 +457,7 @@ public class UserServiceImpl implements org.exoplatform.chat.services.UserServic
       Object objectUsers = doc.get("users");
       ArrayList myArrayList = (ArrayList) objectUsers;
       for (int i = 0; i < myArrayList.size(); i++) {
-        users.add(getUser(myArrayList.get(i).toString()));
+        users.add(getUser(myArrayList.get(i).toString(), dbName));
       }
     }
     return users;
