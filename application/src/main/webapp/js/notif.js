@@ -676,6 +676,8 @@ ChatNotification.prototype.getChatMessages = function(room, callback) {
   if (this.username !== this.ANONIM_USER) {
     snack.request({
       url: this.jzChatRead,
+            async: false,
+
       data: {
         room: room,
         user: this.username,
