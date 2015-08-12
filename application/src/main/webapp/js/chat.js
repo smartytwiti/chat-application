@@ -2842,6 +2842,7 @@ ChatApplication.prototype.displayVideoCallOnChatApp = function () {
       jzStoreParam("room", chatApplication.room);
       jzStoreParam("targetFullname", targetFullname);
       jzStoreParam("targetUser", targetUser);
+      jzStoreParam("meetingPointId", weemoExtension.meetingPointId);
       weemoExtension.showVideoPopup('/portal/intranet/videocallpopup?mode=attendee&isSpace=' + isSpace + "&spaceOrTeamName=" + spaceOrTeamName);
       //weemoExtension.joinWeemoCall(chatApplication.targetUser, chatApplication.targetFullname, chatMessage);
     }
