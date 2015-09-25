@@ -519,7 +519,7 @@ var chatApplication = new ChatApplication();
       var roomId = chatApplication.targetUser;
       var targetUser = chatApplication.targetUser;
       if (targetUser.indexOf("space-")>-1) {
-    	  isSpace = true;
+        isSpace = true;
       }
 
       // Validate empty
@@ -2022,7 +2022,7 @@ ChatApplication.prototype.loadRoom = function() {
       jqchat(".room-detail-avatar").show();
       jqchat(".target-avatar-link").attr("href", "/portal/g/:spaces:"+spaceName+"/"+spaceName);
       jqchat(".target-avatar-image").attr("onerror", "this.src='/eXoSkin/skin/images/themes/default/social/skin/ShareImages/SpaceAvtDefault.png';");
-      jqchat(".target-avatar-image").attr("src", "/rest/jcr/repository/social/production/soc:providers/soc:space/soc:"+spaceName+"/soc:profile/soc:avatar");
+      jqchat(".target-avatar-image").attr("src", "/rest/chat/api/1.0/user/getSpaceAvartar/"+spaceName);
     }
     else
     ////// TEAM
@@ -2681,9 +2681,6 @@ ChatApplication.prototype.sendMessage = function(msg, callback) {
       options.timestamp = ts;
       options.type = "call-off";
       sendMessageToServer = true;
-      if (typeof weemoExtension !== 'undefined') {
-        weemoExtension.setCallActive(false);
-      }
     } else if (msg.indexOf("/export")===0) {
       this.showAsText();
     } else if (msg.indexOf("/help")===0) {
@@ -2821,7 +2818,21 @@ ChatApplication.prototype.displayVideoCallOnChatApp = function () {
           eXo.ecm.VideoCalls.showReceivingPermissionInterceptor(targetFullname);
           chatApplication.setModalToCenter('#receive-permission-interceptor');
         } else {
-          weemoExtension.createWeemoCall(targetUser, targetFullname, chatMessage);
+          //sightCallExtension.createWeemoCall(targetUser, targetFullname, chatMessage);
+          jzStoreParam("jzChatSend", chatApplication.jzChatSend);
+          jzStoreParam("room", chatApplication.room);
+          jzStoreParam("targetFullname", targetFullname);
+          jzStoreParam("targetUser", targetUser);
+
+          if (targetUser.indexOf("space-") === -1 && targetUser.indexOf("team-") === -1) {
+            weemoExtension.showVideoPopup('/portal/intranet/videocallpopup?callee=' + targetUser.trim() + '&mode=one&hasChatMessage=true');
+          } else {
+            var isSpace = (targetUser.indexOf("space-") !== -1);
+            var spaceOrTeamName = targetFullname.toLowerCase().split(" ").join("_");
+
+            jzStoreParam("isSpace", isSpace);
+            weemoExtension.showVideoPopup('/portal/intranet/videocallpopup?mode=host&isSpace=' + isSpace + "&spaceOrTeamName=" + spaceOrTeamName);
+          }
         }
       } else {
         eXo.ecm.VideoCalls.showPermissionInterceptor();
@@ -2840,13 +2851,24 @@ ChatApplication.prototype.displayVideoCallOnChatApp = function () {
         "room": chatApplication.room,
         "token": chatApplication.token
       };
-      weemoExtension.joinWeemoCall(chatApplication.targetUser, chatApplication.targetFullname, chatMessage);
+      var targetUser = chatApplication.targetUser.trim();
+      var targetFullname = chatApplication.targetFullname.trim();
+      var isSpace = (targetUser.indexOf("space-") !== -1);
+      var spaceOrTeamName = targetFullname.toLowerCase().split(" ").join("_");
+
+      jzStoreParam("jzChatSend", chatApplication.jzChatSend);
+      jzStoreParam("room", chatApplication.room);
+      jzStoreParam("targetFullname", targetFullname);
+      jzStoreParam("targetUser", targetUser);
+      jzStoreParam("meetingPointId", weemoExtension.meetingPointId);
+      weemoExtension.showVideoPopup('/portal/intranet/videocallpopup?mode=attendee&isSpace=' + isSpace + "&spaceOrTeamName=" + spaceOrTeamName);
+      //weemoExtension.joinWeemoCall(chatApplication.targetUser, chatApplication.targetFullname, chatMessage);
     }
   });
 
   function cbGetConnectionStatus(targetUser, activity) {
     if (targetUser.indexOf("space-") === -1 && targetUser.indexOf("team-") === -1) {
-      if (weemoExtension.isConnected && (activity !== "offline" && activity !== "invisible")) {
+      if (activity !== "offline" && activity !== "invisible") {
         jqchat(".btn-weemo").removeClass("disabled");
         jqchat(".btn-weemo-conf").removeClass("disabled");
       } else {
@@ -2854,19 +2876,62 @@ ChatApplication.prototype.displayVideoCallOnChatApp = function () {
         jqchat(".btn-weemo-conf").addClass("disabled");
       }
     } else {
-      if (weemoExtension.isConnected) {
         jqchat(".btn-weemo").removeClass("disabled");
-        jqchat(".btn-weemo-conf").removeClass("disabled");
-      } else {
-        jqchat(".btn-weemo").addClass("disabled");
-        jqchat(".btn-weemo-conf").addClass("disabled");
-      }
+        //jqchat(".btn-weemo-conf").removeClass("disabled");
     }
   }
 
   chatNotification.getStatus(chatApplication.targetUser, cbGetConnectionStatus);
 
   setTimeout(function () {
-    chatApplication.displayVideoCallOnChatApp()
+    chatApplication.displayVideoCallOnChatApp();
+    var chatMessage = JSON.parse( jzGetParam("chatMessage", '{}') );
+      if ((chatMessage.url !== undefined) && (chatNotification !== undefined) && jzGetParam("isSightCallConnected",false) === "false"
+        && (jzGetParam("callMode") === "one" || jzGetParam("callMode") === "host")) {
+        var roomToCheck = chatMessage.room;
+
+        chatNotification.checkIfMeetingStarted(roomToCheck, function(callStatus, recordStatus) {
+
+            if (callStatus !== 1) { // Already terminated
+               jzStoreParam("chatMessage", JSON.stringify({}));
+               return;
+            }
+
+            // Also Update record status
+            if (recordStatus === 1) {
+                var options = {
+                    type: "type-meeting-stop",
+                    fromUser: chatNotification.username,
+                    fromFullname: chatNotification.username
+                };
+                chatNotification.sendFullMessage(
+                  chatMessage.user,
+                  chatMessage.token,
+                  chatMessage.targetUser,
+                  roomToCheck,
+                  "",
+                  options,
+                  "true"
+                );
+            }
+
+            var options = {};
+            options.timestamp = Math.round(new Date().getTime() / 1000);
+            options.type = "call-off";
+            chatNotification.sendFullMessage(
+              chatMessage.user,
+              chatMessage.token,
+              chatMessage.targetUser,
+              roomToCheck,
+              chatBundleData.exoplatform_chat_call_terminated,
+              options,
+              "true"
+            );
+
+            localStorage.removeItem("chatMessage");
+            localStorage.removeItem("isSightCallConnected");
+            localStorage.removeItem("callMode");
+        });
+    }
   }, 3000);
 };
